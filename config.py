@@ -15,10 +15,24 @@ ALPACA_DATA_URL = "https://data.alpaca.markets"
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 GEMINI_MODEL_FALLBACKS = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-pro-latest"]
 
-# أسهم كبيرة وسائلة (سهلة الشراء/البيع بسرعة، تقلب معقول، أخبار وفيرة)
+# أسهم كبيرة وسائلة من قطاعات متنوعة (تقنية، طاقة، صحة، استهلاك، صناعة، تمويل)
+# التنويع بين القطاعات يرفع احتمال ظهور توافق بين الإشارة الفنية والأخبار في أي وقت،
+# لأن قطاعات مختلفة تتحرك بدورات وأوقات مختلفة
 WATCHLIST = [
-    "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA",
-    "META", "TSLA", "JPM", "V", "JNJ",
+    # تقنية
+    "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META",
+    # سيارات وطاقة
+    "TSLA", "XOM", "CVX",
+    # تمويل
+    "JPM", "V", "MA",
+    # صحة
+    "JNJ", "UNH", "PFE",
+    # استهلاك وتجزئة
+    "WMT", "KO", "MCD",
+    # صناعة
+    "CAT", "BA",
+    # صناديق مؤشرات واسعة (تنويع إضافي داخل الصفقة الواحدة)
+    "SPY", "QQQ",
 ]
 
 # --- إدارة المخاطرة ---
@@ -31,3 +45,4 @@ DAILY_LOSS_LIMIT_PCT = 0.03    # قاطع دائرة: توقف عن الشراء
 # --- الإشارة الفنية ---
 SHORT_MA_PERIOD = 5
 LONG_MA_PERIOD = 20
+
