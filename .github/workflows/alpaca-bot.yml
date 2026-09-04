@@ -30,6 +30,8 @@ jobs:
           ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
           ALPACA_BASE_URL: ${{ secrets.ALPACA_BASE_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
         run: python trading_bot.py
 
       - name: Commit daily state
