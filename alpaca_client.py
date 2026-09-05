@@ -32,11 +32,11 @@ def get_recent_bars(symbol: str, days: int = 30) -> list:
     r = requests.get(
         f"{ALPACA_DATA_URL}/v2/stocks/{symbol}/bars",
         headers=HEADERS,
-        params={"timeframe": "1Day", "limit": days, "adjustment": "raw"},
+        params={"timeframe": "1Day", "limit": days, "adjustment": "raw", "feed": "iex"},
         timeout=15,
     )
     r.raise_for_status()
-    bars = r.json().get("bars", [])
+    bars = r.json().get("bars") or []
     return [b["c"] for b in bars]  # أسعار الإغلاق فقط
 
 
@@ -49,7 +49,7 @@ def get_recent_news(symbol: str, limit: int = 5) -> list:
         timeout=15,
     )
     r.raise_for_status()
-    news = r.json().get("news", [])
+    news = r.json().get("news") or []
     return [item["headline"] for item in news]
 
 
