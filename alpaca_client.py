@@ -1,6 +1,6 @@
 """
 alpaca_client.py
-=================
+==================
 غلاف بسيط لكل استدعاءات Alpaca API التي نحتاجها:
 معلومات الحساب، الصفقات المفتوحة، بيانات الأسعار التاريخية، الأخبار، وتنفيذ الأوامر.
 """
@@ -28,20 +28,33 @@ def get_open_positions() -> list:
 
 
 def get_recent_bars(symbol: str, days: int = 30) -> list:
-    """يرجع أسعار الإغلاق اليومية الأخيرة لسهم معيّن."""
-    r = requests.get(
-        f"{ALPACA_DATA_URL}/v2/stocks/{symbol}/bars",
-        headers=HEADERS,
-        params={"timeframe": "1Day", "limit": days, "adjustment": "raw", "feed": "iex"},
-        timeout=15,
-    )
-    r.raise_for_status()
-    bars = r.json().get("bars") or []
+    """يرجع أسعار الإغلاق اليومية الأخيرة لسهم أو عملة مشفرة معينة."""
+    is_crypto = "/" in symbol  # مثال: BTC/USD
+
+    if is_crypto:
+        r = requests.get(
+            f"{ALPACA_DATA_URL}/v1beta3/crypto/us/bars",
+            headers=HEADERS,
+            params={"symbols": symbol, "timeframe": "1Day", "limit": days},
+            timeout=15,
+        )
+        r.raise_for_status()
+        bars = r.json().get("bars", {}).get(symbol) or []
+    else:
+        r = requests.get(
+            f"{ALPACA_DATA_URL}/v2/stocks/{symbol}/bars",
+            headers=HEADERS,
+            params={"timeframe": "1Day", "limit": days, "adjustment": "raw", "feed": "iex"},
+            timeout=15,
+        )
+        r.raise_for_status()
+        bars = r.json().get("bars") or []
+
     return [b["c"] for b in bars]  # أسعار الإغلاق فقط
 
 
 def get_recent_news(symbol: str, limit: int = 5) -> list:
-    """يرجع عناوين آخر الأخبار المتعلقة بسهم معيّن."""
+    """يرجع عناوين آخر الأخبار المتعلقة بسهم معين."""
     r = requests.get(
         f"{ALPACA_DATA_URL}/v1beta1/news",
         headers=HEADERS,
@@ -54,7 +67,7 @@ def get_recent_news(symbol: str, limit: int = 5) -> list:
 
 
 def place_bracket_order(symbol: str, qty: int, entry_price: float, stop_loss_price: float, take_profit_price: float) -> dict:
-    """يفتح صفقة شراء مع وقف خسارة وجني أرباح تلقائيين مرفقين معًا (Bracket Order)."""
+    """يفتح صفقة شراء مع وقف خسارة وجني أرباح تلقائيين مرفقين معا (Bracket Order)."""
     order = {
         "symbol": symbol,
         "qty": str(qty),
