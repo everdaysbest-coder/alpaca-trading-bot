@@ -47,7 +47,7 @@ def main():
             print(f"   ⚠️ لا توجد بيانات أسعار كافية لـ {symbol}، تجاهل.")
             continue
 
-        headlines = get_recent_news(symbol)
+        headlines = get_recent_news(symbol) or []
         buy, reason = should_buy(prices, symbol, headlines)
         print(f"   {reason}")
 
