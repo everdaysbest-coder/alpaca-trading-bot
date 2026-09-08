@@ -2,15 +2,6 @@
 trading_bot_loop.py
 ====================
 نسخة "دائمة التشغيل" من trading_bot.py، مخصصة للعمل على Render كخطة مجانية.
-
-ملاحظة تقنية مهمة:
-Render "Free Web Service" محتاج السيرفر يفتح بورت (عشان يعتبره صحي)، بعكس
-"Background Worker" اللي بيكلف $7/شهر. الحل: نفتح سيرفر HTTP بسيط جدًا في
-Thread منفصل (بيرد بس "OK")، وفي نفس الوقت نشغّل حلقة فحص السوق في الخلفية.
-
-بعد الرفع، لازم تضيف "cronjob" جديد على cron-job.org بيزور رابط السيرفر ده
-كل 10-14 دقيقة، بنفس الطريقة اللي عملناها مع cinemora-backend، عشان يفضل صاحي
-ومايناموش بعد 15 دقيقة سكون.
 """
 
 import os
@@ -18,7 +9,7 @@ import time
 import threading
 import traceback
 from datetime import datetime, timezone
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from trading_bot import main as run_trading_cycle
 
@@ -27,22 +18,30 @@ PORT = int(os.environ.get("PORT", 10000))
 
 
 class HealthCheckHandler(BaseHTTPRequestHandler):
-    """سيرفر بسيط جدًا بيرد بـ OK بس، عشان Render يعتبر الخدمة صحية."""
+    """سيرفر بسيط بيرد بـ OK على GET و HEAD، مع Content-Length صريح."""
 
-    def do_GET(self):
+    def _respond(self, send_body: bool):
+        body = b"Alpaca trading bot worker is alive."
         self.send_response(200)
         self.send_header("Content-type", "text/plain")
+        self.send_header("Content-Length", str(len(body)))
         self.end_headers()
-        self.wfile.write(b"Alpaca trading bot worker is alive.")
+        if send_body:
+            self.wfile.write(body)
+
+    def do_GET(self):
+        self._respond(send_body=True)
+
+    def do_HEAD(self):
+        self._respond(send_body=False)
 
     def log_message(self, format, *args):
-        pass  # نمنع طباعة كل طلب HTTP عشان اللوجز تفضل نضيفة
+        pass
 
 
 def is_market_hours() -> bool:
-    """فحص تقريبي لساعات تداول أمريكا (14:30 - 21:00 UTC، أيام الأسبوع فقط)."""
     now = datetime.now(timezone.utc)
-    if now.weekday() >= 5:  # السبت=5, الأحد=6
+    if now.weekday() >= 5:
         return False
     minutes_since_midnight = now.hour * 60 + now.minute
     return 14 * 60 + 30 <= minutes_since_midnight <= 21 * 60
@@ -65,11 +64,9 @@ def trading_loop():
 
 
 if __name__ == "__main__":
-    # نشغّل حلقة فحص السوق في Thread منفصل بالخلفية
     t = threading.Thread(target=trading_loop, daemon=True)
     t.start()
 
-    # ونفتح سيرفر HTTP بسيط في الـ Thread الرئيسي عشان Render يقبل الخدمة كـ Web Service مجاني
-    server = HTTPServer(("0.0.0.0", PORT), HealthCheckHandler)
+    server = ThreadingHTTPServer(("0.0.0.0", PORT), HealthCheckHandler)
     print(f"🌐 سيرفر فحص الصحة شغال على البورت {PORT}")
     server.serve_forever()
