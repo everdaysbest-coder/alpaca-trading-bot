@@ -41,4 +41,4 @@ def get_recent_bars(symbol: str, days: int = 30) -> list:
     is_crypto = "/" in symbol  # مثال: BTC/USD
     start = (datetime.now(timezone.utc) - timedelta(days=days + 10)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    if is_crypto
+    if is_crypto:
